@@ -3,7 +3,7 @@
 //! This is a useful data to connect ASNs to IXes and find connected networks that share the same IX
 //! connectivity.
 
-use crate::data::utils::get_reader_with_params;
+use crate::data::utils::get_reader;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -44,7 +44,7 @@ pub fn load_peeringdb_netixlan() -> Result<Vec<PeeringdbNetixlan>> {
 ///
 /// [api]: https://www.peeringdb.com/apidocs/#tag/api/operation/list%20netixlan
 pub fn load_peeringdb_netixlan_filtered(params: &[(&str, &str)]) -> Result<Vec<PeeringdbNetixlan>> {
-    let mut reader = get_reader_with_params("https://www.peeringdb.com/api/netixlan", params)?;
+    let mut reader = get_reader("https://www.peeringdb.com/api/netixlan", params)?;
     let mut buf = String::new();
     reader.read_to_string(&mut buf)?;
     let res: PeeringdbNetixlanResponse = serde_json::from_str(&buf)?;
@@ -62,5 +62,12 @@ mod tests {
         // org records also deserialize into PeeringdbNetixlan (only `id` is required),
         // so check for a netixlan-specific field to make sure we hit the right endpoint
         assert!(vec.iter().any(|n| n.asn.is_some()));
+    }
+
+    #[test]
+    fn test_loading_filtered_data() {
+        let data = load_peeringdb_netixlan_filtered(&[("asn", "13335")]).unwrap();
+        assert!(!data.is_empty());
+        assert!(data.iter().all(|n| n.asn == Some(13335)));
     }
 }

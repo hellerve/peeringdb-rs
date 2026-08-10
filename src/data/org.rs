@@ -1,4 +1,4 @@
-use crate::data::utils::get_reader_with_params;
+use crate::data::utils::get_reader;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -42,7 +42,7 @@ pub fn load_peeringdb_org() -> anyhow::Result<Vec<PeeringdbOrg>> {
 ///
 /// [api]: https://www.peeringdb.com/apidocs/#tag/api/operation/list%20org
 pub fn load_peeringdb_org_filtered(params: &[(&str, &str)]) -> anyhow::Result<Vec<PeeringdbOrg>> {
-    let mut reader = get_reader_with_params("https://www.peeringdb.com/api/org", params)?;
+    let mut reader = get_reader("https://www.peeringdb.com/api/org", params)?;
     let mut buf = String::new();
     reader.read_to_string(&mut buf)?;
     let res: PeeringdbOrgResponse = serde_json::from_str(&buf)?;
@@ -57,5 +57,12 @@ mod tests {
     fn test_loading_data() {
         let data = load_peeringdb_org();
         assert!(data.is_ok());
+    }
+
+    #[test]
+    fn test_loading_filtered_data() {
+        let data = load_peeringdb_org_filtered(&[("country", "DE")]).unwrap();
+        assert!(!data.is_empty());
+        assert!(data.iter().all(|org| org.country.as_deref() == Some("DE")));
     }
 }

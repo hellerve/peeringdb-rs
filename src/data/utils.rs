@@ -3,10 +3,7 @@ use oneio::remote::create_client_with_headers;
 use std::io::Read;
 use tracing::warn;
 
-pub(crate) fn get_reader_with_params(
-    url: &str,
-    params: &[(&str, &str)],
-) -> Result<Box<dyn Read + Send>> {
+pub(crate) fn get_reader(url: &str, params: &[(&str, &str)]) -> Result<Box<dyn Read + Send>> {
     dotenvy::dotenv().ok();
     let mut headers = vec![(
         "User-Agent".to_string(),

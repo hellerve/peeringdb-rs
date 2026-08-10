@@ -1,6 +1,6 @@
 //! `ix` objects contains information of Internet Exchanges
 
-use crate::data::utils::get_reader_with_params;
+use crate::data::utils::get_reader;
 use anyhow::Result;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -63,7 +63,7 @@ pub fn load_peeringdb_ix() -> Result<Vec<PeeringdbIx>> {
 ///
 /// [api]: https://www.peeringdb.com/apidocs/#tag/api/operation/list%20ix
 pub fn load_peeringdb_ix_filtered(params: &[(&str, &str)]) -> Result<Vec<PeeringdbIx>> {
-    let mut reader = get_reader_with_params("https://www.peeringdb.com/api/ix", params)?;
+    let mut reader = get_reader("https://www.peeringdb.com/api/ix", params)?;
     let mut buf = String::new();
     reader.read_to_string(&mut buf)?;
     let res: PeeringdbIxResponse = serde_json::from_str(&buf)?;
@@ -78,5 +78,12 @@ mod tests {
     fn test_loading_data() {
         let data = load_peeringdb_ix();
         assert!(data.is_ok());
+    }
+
+    #[test]
+    fn test_loading_filtered_data() {
+        let data = load_peeringdb_ix_filtered(&[("country", "DE")]).unwrap();
+        assert!(!data.is_empty());
+        assert!(data.iter().all(|ix| ix.country.as_deref() == Some("DE")));
     }
 }
